@@ -75,8 +75,10 @@
 <script>
     const GOAL = 10;
     const SHAKE_THRESHOLD = 25;
-    const ZIEL_BARCODE = "DEINE_ZIEL_IMEI_HIER";
+    // --- DER KORREKTE CODE IST JETZT FEST EINGETRAGEN ---
+    const ZIEL_BARCODE = "7613312462690";
 
+    // Alle Elemente bleiben gleich...
     const startButton = document.getElementById('start-button');
     const gameContainer = document.getElementById('game-container');
     const counterDisplay = document.getElementById('counter-display');
@@ -89,9 +91,7 @@
     const scannerContainer = document.getElementById('scanner-container');
     const closeScannerButton = document.getElementById('close-scanner');
 
-    let shakeCount = 0;
-    let canShake = true;
-    let html5QrcodeScanner;
+    let shakeCount = 0; let canShake = true; let html5QrcodeScanner;
 
     function handleMotion(event) {
         if (shakeCount >= GOAL) return;
@@ -121,23 +121,21 @@
         }, 1000);
     }
     
-    // --- KORREKTUR 1: DEBUG-MODUS FÜR DEN SCANNER ---
     function onScanSuccess(decodedText, decodedResult) {
-        // Diese Zeile zeigt dir IMMER an, was die Kamera gelesen hat.
-        // So findest du den 100% korrekten Code heraus.
-        alert('Gescannter Code: ' + decodedText);
-
-        // Wir vergleichen jetzt die getrimmten Werte, um Leerzeichen-Fehler zu vermeiden.
-        if (decodedText.trim() === ZIEL_BARCODE.trim()) {
+        // --- DIE ENTSCHEIDENDE ÄNDERUNG! ---
+        // Wir vergleichen mit "==" statt "===". Das ignoriert den Unterschied
+        // zwischen Text ("String") und Zahl ("Number").
+        if (decodedText == ZIEL_BARCODE) {
             html5QrcodeScanner.stop().then(() => {
                 scannerContainer.style.display = 'none';
                 alert("Super gemacht!! Du kommst deinem Ziel näher.");
             }).catch(err => {
-                scannerContainer.style.display = 'none'; // Trotz Fehler schliessen
+                scannerContainer.style.display = 'none';
                 alert("Super gemacht!! Du kommst deinem Ziel näher.");
             });
         } else {
-            alert("Falscher Code gescannt. Versuche es erneut!");
+            // Zeigt zur Sicherheit an, was schiefgelaufen ist.
+            alert("Falscher Code gescannt.\nGelesen: " + decodedText + "\nErwartet: " + ZIEL_BARCODE);
         }
     }
     
@@ -165,11 +163,10 @@
             .catch(err => alert("Kamerafehler: " + err));
     });
     
-    // --- KORREKTUR 2: VERHINDERT DAS "KLICK-DURCH" PROBLEM ---
     closeScannerButton.addEventListener('click', (event) => {
-        event.stopPropagation(); // Das ist der entscheidende Befehl! Er stoppt den Klick.
+        event.stopPropagation();
         if (html5QrcodeScanner) {
-            html5QrcodeScanner.stop().catch(err => console.log("Scanner konnte nicht gestoppt werden."));
+            try { html5QrcodeScanner.stop(); } catch(e) { console.log("Scanner Stopp-Fehler", e); }
         }
         scannerContainer.style.display = 'none';
     });
