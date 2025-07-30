@@ -4,80 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Schüttel-Challenge</title>
-    <!-- Bibliothek für den Barcode-Scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #1a1a1a; /* Hintergrund, falls das Bild nicht lädt */
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-            overflow: hidden; /* Wichtig, um Scrollbalken zu verhindern */
+            background-color: #1a1a1a; color: white; display: flex;
+            justify-content: center; align-items: center; height: 100vh;
+            margin: 0; text-align: center; overflow: hidden;
         }
-
-        /* Der Start-Button bleibt unverändert */
         #start-button {
             padding: 20px 40px; font-size: 1.5rem; font-weight: bold; color: white;
             background-color: #4CAF50; border: none; border-radius: 10px; cursor: pointer;
         }
-
-        /* --- NEU: Container für das Spiel füllt jetzt den ganzen Bildschirm --- */
         #game-container {
-            display: none;
-            flex-direction: column;
-            justify-content: center; /* Zentriert Inhalt vertikal */
-            align-items: center;     /* Zentriert Inhalt horizontal */
-            width: 100vw; /* 100% der Bildschirmbreite */
-            height: 100vh;/* 100% der Bildschirmhöhe */
-            position: fixed; /* Bleibt über allem */
-            top: 0;
-            left: 0;
-            background-color: black; /* Schwarzer Hintergrund, damit nichts durchscheint */
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; background-color: black;
         }
-
-        /* --- NEU: Spinner ist viel grösser und zentriert --- */
         #spinner {
-            width: 90%; /* Füllt 90% der Bildschirmbreite */
-            max-width: 400px; /* Aber nicht mehr als 400px auf grossen Bildschirmen */
-            height: auto;
+            width: 90%; max-width: 400px; height: auto;
             animation: spin 1.5s linear infinite;
         }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         #counter-display {
             font-size: 5rem; font-weight: bold; margin-top: 20px; font-family: 'Courier New', Courier, monospace;
-            /* Text-Schatten, damit er über dem Spinner lesbar ist */
             text-shadow: 0 0 10px black, 0 0 10px black;
         }
-
-        /* Die anderen Container bleiben für die spätere Nutzung */
         #bomb-container, #result-container {
              display: none; flex-direction: column; align-items: center; padding: 2rem;
         }
-
         #bomb-container { font-size: 5rem; }
         #bomb-timer { font-size: 3rem; margin-top: 20px; color: #ff4757; }
-
         #explosion {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             justify-content: center; align-items: center; font-size: 200px;
             animation: explode 0.5s ease-out forwards; z-index: 100;
         }
-        
-        @keyframes explode {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(3); opacity: 0; }
-        }
-
+        @keyframes explode { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
         #result-image { max-width: 80%; max-height: 50vh; border-radius: 10px; margin-bottom: 20px; }
         #result-text { font-size: 1.2rem; font-weight: bold; padding: 0 1rem; max-width: 500px; }
         #scan-button { margin-top: 20px; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #007bff; border: none; border-radius: 10px; cursor: pointer; }
@@ -110,11 +73,9 @@
     <audio id="tada-sound" src="tada.mp3" preload="auto"></audio>
 
 <script>
-    // --- VARIABLEN ZUM ANPASSEN ---
     const GOAL = 10;
     const SHAKE_THRESHOLD = 25;
-    const ZIEL_BARCODE = "DEINE_ZIEL_IMEI_HIER"; // WICHTIG: Ersetzen!
-    // -----------------------------
+    const ZIEL_BARCODE = "DEINE_ZIEL_IMEI_HIER";
 
     const startButton = document.getElementById('start-button');
     const gameContainer = document.getElementById('game-container');
@@ -136,28 +97,21 @@
         if (shakeCount >= GOAL) return;
         const acc = event.accelerationIncludingGravity;
         if (canShake && (Math.abs(acc.x) > SHAKE_THRESHOLD || Math.abs(acc.y) > SHAKE_THRESHOLD)) {
-            canShake = false;
-            shakeCount++;
+            canShake = false; shakeCount++;
             counterDisplay.textContent = shakeCount;
-            if (shakeCount >= GOAL) {
-                startFinalSequence();
-            }
+            if (shakeCount >= GOAL) { startFinalSequence(); }
             setTimeout(() => { canShake = true; }, 500);
         }
     }
 
     function startFinalSequence() {
         gameContainer.style.display = 'none';
-        tadaSound.play();
-        bombContainer.style.display = 'flex';
-        let timer = 3;
-        bombTimer.textContent = timer;
+        tadaSound.play(); bombContainer.style.display = 'flex';
+        let timer = 3; bombTimer.textContent = timer;
         const interval = setInterval(() => {
-            timer--;
-            bombTimer.textContent = timer;
+            timer--; bombTimer.textContent = timer;
             if (timer <= 0) {
-                clearInterval(interval);
-                bombContainer.style.display = 'none';
+                clearInterval(interval); bombContainer.style.display = 'none';
                 explosion.style.display = 'flex';
                 setTimeout(() => {
                     explosion.style.display = 'none';
@@ -167,11 +121,19 @@
         }, 1000);
     }
     
+    // --- KORREKTUR 1: DEBUG-MODUS FÜR DEN SCANNER ---
     function onScanSuccess(decodedText, decodedResult) {
-        if (decodedText === ZIEL_BARCODE) {
+        // Diese Zeile zeigt dir IMMER an, was die Kamera gelesen hat.
+        // So findest du den 100% korrekten Code heraus.
+        alert('Gescannter Code: ' + decodedText);
+
+        // Wir vergleichen jetzt die getrimmten Werte, um Leerzeichen-Fehler zu vermeiden.
+        if (decodedText.trim() === ZIEL_BARCODE.trim()) {
             html5QrcodeScanner.stop().then(() => {
                 scannerContainer.style.display = 'none';
-                // --- NEU: Geänderter Erfolgs-Text ---
+                alert("Super gemacht!! Du kommst deinem Ziel näher.");
+            }).catch(err => {
+                scannerContainer.style.display = 'none'; // Trotz Fehler schliessen
                 alert("Super gemacht!! Du kommst deinem Ziel näher.");
             });
         } else {
@@ -182,37 +144,30 @@
     function onScanFailure(error) { /* Kann ignoriert werden */ }
 
     startButton.addEventListener('click', () => {
-        // --- WICHTIG: Der Trick für den Sound ---
-        // Wir laden den Sound hier, nachdem der Benutzer geklickt hat.
-        // Das umgeht die Autoplay-Sperre von mobilen Browsern.
         tadaSound.load();
-
         if (typeof DeviceMotionEvent.requestPermission === 'function') {
             DeviceMotionEvent.requestPermission().then(state => {
                 if (state === 'granted') {
                     window.addEventListener('devicemotion', handleMotion);
-                    startButton.style.display = 'none';
-                    gameContainer.style.display = 'flex';
+                    startButton.style.display = 'none'; gameContainer.style.display = 'flex';
                 }
             }).catch(err => alert("Zugriff auf Sensoren wurde verweigert."));
         } else {
             window.addEventListener('devicemotion', handleMotion);
-            startButton.style.display = 'none';
-            gameContainer.style.display = 'flex';
+            startButton.style.display = 'none'; gameContainer.style.display = 'flex';
         }
     });
 
     scanButton.addEventListener('click', () => {
         scannerContainer.style.display = 'block';
         html5QrcodeScanner = new Html5Qrcode("reader");
-        html5QrcodeScanner.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            onScanSuccess, onScanFailure
-        ).catch(err => alert("Kamerafehler: " + err));
+        html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, onScanFailure)
+            .catch(err => alert("Kamerafehler: " + err));
     });
     
-    closeScannerButton.addEventListener('click', () => {
+    // --- KORREKTUR 2: VERHINDERT DAS "KLICK-DURCH" PROBLEM ---
+    closeScannerButton.addEventListener('click', (event) => {
+        event.stopPropagation(); // Das ist der entscheidende Befehl! Er stoppt den Klick.
         if (html5QrcodeScanner) {
             html5QrcodeScanner.stop().catch(err => console.log("Scanner konnte nicht gestoppt werden."));
         }
