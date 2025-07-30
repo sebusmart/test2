@@ -2,14 +2,14 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Schüttel-Challenge</title>
-    <!-- Diese Zeile lädt die Bibliothek für den Barcode-Scanner -->
+    <!-- Bibliothek für den Barcode-Scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #1a1a1a;
+            background-color: #1a1a1a; /* Hintergrund, falls das Bild nicht lädt */
             color: white;
             display: flex;
             justify-content: center;
@@ -17,24 +17,34 @@
             height: 100vh;
             margin: 0;
             text-align: center;
-            overflow: hidden;
+            overflow: hidden; /* Wichtig, um Scrollbalken zu verhindern */
         }
 
+        /* Der Start-Button bleibt unverändert */
         #start-button {
             padding: 20px 40px; font-size: 1.5rem; font-weight: bold; color: white;
             background-color: #4CAF50; border: none; border-radius: 10px; cursor: pointer;
         }
 
-        #game-container, #result-container, #bomb-container {
-            display: none; /* Alle Container sind am Anfang versteckt */
+        /* --- NEU: Container für das Spiel füllt jetzt den ganzen Bildschirm --- */
+        #game-container {
+            display: none;
             flex-direction: column;
-            align-items: center;
-            padding: 2rem;
+            justify-content: center; /* Zentriert Inhalt vertikal */
+            align-items: center;     /* Zentriert Inhalt horizontal */
+            width: 100vw; /* 100% der Bildschirmbreite */
+            height: 100vh;/* 100% der Bildschirmhöhe */
+            position: fixed; /* Bleibt über allem */
+            top: 0;
+            left: 0;
+            background-color: black; /* Schwarzer Hintergrund, damit nichts durchscheint */
         }
 
+        /* --- NEU: Spinner ist viel grösser und zentriert --- */
         #spinner {
-            width: 150px;
-            height: 150px;
+            width: 90%; /* Füllt 90% der Bildschirmbreite */
+            max-width: 400px; /* Aber nicht mehr als 400px auf grossen Bildschirmen */
+            height: auto;
             animation: spin 1.5s linear infinite;
         }
 
@@ -42,18 +52,25 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-
+        
         #counter-display {
             font-size: 5rem; font-weight: bold; margin-top: 20px; font-family: 'Courier New', Courier, monospace;
+            /* Text-Schatten, damit er über dem Spinner lesbar ist */
+            text-shadow: 0 0 10px black, 0 0 10px black;
         }
-        
+
+        /* Die anderen Container bleiben für die spätere Nutzung */
+        #bomb-container, #result-container {
+             display: none; flex-direction: column; align-items: center; padding: 2rem;
+        }
+
         #bomb-container { font-size: 5rem; }
         #bomb-timer { font-size: 3rem; margin-top: 20px; color: #ff4757; }
 
         #explosion {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             justify-content: center; align-items: center; font-size: 200px;
-            animation: explode 0.5s ease-out forwards;
+            animation: explode 0.5s ease-out forwards; z-index: 100;
         }
         
         @keyframes explode {
@@ -61,75 +78,44 @@
             100% { transform: scale(3); opacity: 0; }
         }
 
-        #result-image {
-            max-width: 80%; max-height: 50vh; border-radius: 10px; margin-bottom: 20px;
-        }
-        
-        #result-text {
-            font-size: 1.2rem; font-weight: bold; padding: 0 1rem; max-width: 500px;
-        }
-
-        #scan-button {
-            margin-top: 20px; padding: 15px 30px; font-size: 1.2rem; font-weight: bold;
-            color: white; background-color: #007bff; border: none; border-radius: 10px; cursor: pointer;
-        }
-        
-        /* Container für den Kamera-Scanner */
-        #scanner-container {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: black;
-        }
+        #result-image { max-width: 80%; max-height: 50vh; border-radius: 10px; margin-bottom: 20px; }
+        #result-text { font-size: 1.2rem; font-weight: bold; padding: 0 1rem; max-width: 500px; }
+        #scan-button { margin-top: 20px; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #007bff; border: none; border-radius: 10px; cursor: pointer; }
+        #scanner-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 200; }
         #reader { width: 100%; }
-        #close-scanner {
-            position: absolute; top: 20px; right: 20px; font-size: 2rem;
-            color: white; background: rgba(0,0,0,0.5); border-radius: 50%;
-            padding: 5px 15px; cursor: pointer; z-index: 10;
-        }
+        #close-scanner { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: white; background: rgba(0,0,0,0.5); border-radius: 50%; padding: 5px 15px; cursor: pointer; z-index: 10; }
     </style>
 </head>
 <body>
 
     <button id="start-button">Start</button>
-
     <div id="game-container">
-        <!-- Das PNG wird hier eingefügt -->
         <img id="spinner" src="IMG_BOb6tIFb0z9m.png" alt="Fidget Spinner">
         <div id="counter-display">0</div>
     </div>
-    
     <div id="bomb-container">
         <div>💣</div>
         <div id="bomb-timer">3</div>
     </div>
-    
     <div id="explosion">💥</div>
-    
     <div id="result-container">
-        <!-- Das Ergebnis-Bild wird hier eingefügt -->
         <img id="result-image" src="DSC00429.jpg" alt="Hinweis zum nächsten Ort">
         <p id="result-text">Scanne jetzt deine liebste kulinarische Sünde – etwas, das eine ernährungsbewusste Vegetarierin meiden würde, du aber heimlich liebst und schon lange nicht mehr hattest.</p>
         <button id="scan-button">Speise scannen</button>
     </div>
-
     <div id="scanner-container">
         <div id="close-scanner">×</div>
         <div id="reader"></div>
     </div>
-
-    <!-- Das "Tadaa" Geräusch -->
-    <audio id="tada-sound" src="tada.mp3"></audio>
+    <audio id="tada-sound" src="tada.mp3" preload="auto"></audio>
 
 <script>
     // --- VARIABLEN ZUM ANPASSEN ---
-    const GOAL = 10; // Wie oft schütteln?
-    const SHAKE_THRESHOLD = 25; // Wie stark schütteln? (höher = stärker)
-    const ZIEL_BARCODE = "7613312462690"; // WICHTIG: Ersetze das mit dem echten Code!
+    const GOAL = 10;
+    const SHAKE_THRESHOLD = 25;
+    const ZIEL_BARCODE = "DEINE_ZIEL_IMEI_HIER"; // WICHTIG: Ersetzen!
     // -----------------------------
 
-    // Elemente aus dem HTML holen
     const startButton = document.getElementById('start-button');
     const gameContainer = document.getElementById('game-container');
     const counterDisplay = document.getElementById('counter-display');
@@ -147,7 +133,7 @@
     let html5QrcodeScanner;
 
     function handleMotion(event) {
-        if (shakeCount >= GOAL) return; // Stoppen, wenn Ziel erreicht
+        if (shakeCount >= GOAL) return;
         const acc = event.accelerationIncludingGravity;
         if (canShake && (Math.abs(acc.x) > SHAKE_THRESHOLD || Math.abs(acc.y) > SHAKE_THRESHOLD)) {
             canShake = false;
@@ -185,20 +171,22 @@
         if (decodedText === ZIEL_BARCODE) {
             html5QrcodeScanner.stop().then(() => {
                 scannerContainer.style.display = 'none';
-                alert("RICHTIG! Der nächste Hinweis lautet: Gehe dorthin, wo alles begann.");
-                // Hier könntest du auf die nächste Seite weiterleiten:
-                // window.location.href = "https://DEIN-GITHUB-NAME.github.io/posten3/";
+                // --- NEU: Geänderter Erfolgs-Text ---
+                alert("Super gemacht!! Du kommst deinem Ziel näher.");
             });
         } else {
             alert("Falscher Code gescannt. Versuche es erneut!");
         }
     }
     
-    function onScanFailure(error) {
-        // Wird bei jedem Frame ohne erkannten Code aufgerufen. Kann ignoriert werden.
-    }
+    function onScanFailure(error) { /* Kann ignoriert werden */ }
 
     startButton.addEventListener('click', () => {
+        // --- WICHTIG: Der Trick für den Sound ---
+        // Wir laden den Sound hier, nachdem der Benutzer geklickt hat.
+        // Das umgeht die Autoplay-Sperre von mobilen Browsern.
+        tadaSound.load();
+
         if (typeof DeviceMotionEvent.requestPermission === 'function') {
             DeviceMotionEvent.requestPermission().then(state => {
                 if (state === 'granted') {
@@ -206,7 +194,7 @@
                     startButton.style.display = 'none';
                     gameContainer.style.display = 'flex';
                 }
-            }).catch(alert);
+            }).catch(err => alert("Zugriff auf Sensoren wurde verweigert."));
         } else {
             window.addEventListener('devicemotion', handleMotion);
             startButton.style.display = 'none';
@@ -218,10 +206,9 @@
         scannerContainer.style.display = 'block';
         html5QrcodeScanner = new Html5Qrcode("reader");
         html5QrcodeScanner.start(
-            { facingMode: "environment" }, // Die Rückkamera benutzen
+            { facingMode: "environment" },
             { fps: 10, qrbox: { width: 250, height: 250 } },
-            onScanSuccess,
-            onScanFailure
+            onScanSuccess, onScanFailure
         ).catch(err => alert("Kamerafehler: " + err));
     });
     
@@ -231,7 +218,6 @@
         }
         scannerContainer.style.display = 'none';
     });
-
 </script>
 </body>
 </html>
