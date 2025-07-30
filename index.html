@@ -75,10 +75,9 @@
 <script>
     const GOAL = 10;
     const SHAKE_THRESHOLD = 25;
-    // --- DER KORREKTE CODE IST JETZT FEST EINGETRAGEN ---
+    // Ihr Barcode ist hier fest eingetragen
     const ZIEL_BARCODE = "7613312462690";
 
-    // Alle Elemente bleiben gleich...
     const startButton = document.getElementById('start-button');
     const gameContainer = document.getElementById('game-container');
     const counterDisplay = document.getElementById('counter-display');
@@ -121,21 +120,21 @@
         }, 1000);
     }
     
+    // --- ZURÜCK ZUR ORIGINALEN, FUNKTIONIERENDEN SCAN-LOGIK ---
     function onScanSuccess(decodedText, decodedResult) {
-        // --- DIE ENTSCHEIDENDE ÄNDERUNG! ---
-        // Wir vergleichen mit "==" statt "===". Das ignoriert den Unterschied
-        // zwischen Text ("String") und Zahl ("Number").
-        if (decodedText == ZIEL_BARCODE) {
+        // Strikter Vergleich, der im ersten Versuch funktioniert hat.
+        if (decodedText === ZIEL_BARCODE) {
             html5QrcodeScanner.stop().then(() => {
                 scannerContainer.style.display = 'none';
+                // Ihr gewünschter Erfolgs-Text
                 alert("Super gemacht!! Du kommst deinem Ziel näher.");
             }).catch(err => {
+                // Fängt Fehler beim Stoppen ab, schliesst aber trotzdem.
                 scannerContainer.style.display = 'none';
                 alert("Super gemacht!! Du kommst deinem Ziel näher.");
             });
         } else {
-            // Zeigt zur Sicherheit an, was schiefgelaufen ist.
-            alert("Falscher Code gescannt.\nGelesen: " + decodedText + "\nErwartet: " + ZIEL_BARCODE);
+            alert("Falscher Code gescannt. Versuche es erneut!");
         }
     }
     
@@ -163,10 +162,12 @@
             .catch(err => alert("Kamerafehler: " + err));
     });
     
+    // Der korrigierte Schliessen-Knopf, der das "Durchklicken" verhindert.
     closeScannerButton.addEventListener('click', (event) => {
         event.stopPropagation();
         if (html5QrcodeScanner) {
-            try { html5QrcodeScanner.stop(); } catch(e) { console.log("Scanner Stopp-Fehler", e); }
+            // Sicherer Weg, den Scanner zu stoppen, auch wenn er schon gestoppt ist.
+            html5QrcodeScanner.getState() === "SCANNING" && html5QrcodeScanner.stop();
         }
         scannerContainer.style.display = 'none';
     });
